@@ -1,3 +1,5 @@
+// Updated Services Page with Category Filtering, Deep Linking, Pagination, and Better UX
+
 import Navigation from "@/components/Navigation";
 import {
   Card,
@@ -22,123 +24,349 @@ import {
   ArrowRight,
   Filter,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const Services = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Services");
+  const [visibleCount, setVisibleCount] = useState(6);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const category = searchParams.get("category");
+    const query = searchParams.get("search");
+    if (category) setSelectedCategory(category);
+    if (query) setSearchQuery(query);
+  }, [searchParams]);
 
   const serviceCategories = [
-    { name: "All Services", count: 24, active: true },
-    { name: "Permits & Licenses", count: 8, active: false },
-    { name: "Tax Services", count: 5, active: false },
-    { name: "Transportation", count: 4, active: false },
-    { name: "Housing", count: 3, active: false },
-    { name: "Business", count: 4, active: false },
-  ];
-
+  { name: "All Services", count: 24, active: true },
+  { name: "Permits & Licenses", count: 7, active: false },
+  { name: "Tax Services", count: 1, active: false },
+  { name: "Transportation", count: 3, active: false },
+  { name: "Housing", count: 2, active: false },
+  { name: "Business", count: 1, active: false },
+  { name: "Utilities", count: 3, active: false },
+  { name: "Civic", count: 7, active: false }
+];
   const services = [
-    {
-      id: 1,
-      title: "Parking Permit Application",
-      description: "Apply for residential or business parking permits",
-      category: "Transportation",
-      icon: Car,
-      estimatedTime: "3-5 business days",
-      rating: 4.8,
-      popular: true,
-      online: true,
-    },
-    {
-      id: 2,
-      title: "Property Tax Payment",
-      description: "Pay annual property taxes online",
-      category: "Tax Services",
-      icon: CreditCard,
-      estimatedTime: "Immediate",
-      rating: 4.9,
-      popular: true,
-      online: true,
-    },
-    {
-      id: 3,
-      title: "Business License Renewal",
-      description: "Renew your business operating license",
-      category: "Business",
-      icon: Briefcase,
-      estimatedTime: "5-7 business days",
-      rating: 4.6,
-      popular: false,
-      online: true,
-    },
-    {
-      id: 4,
-      title: "Building Permit",
-      description: "Apply for residential or commercial building permits",
-      category: "Housing",
-      icon: Home,
-      estimatedTime: "10-15 business days",
-      rating: 4.4,
-      popular: false,
-      online: false,
-    },
-    {
-      id: 5,
-      title: "Marriage Certificate",
-      description: "Request official marriage certificate copies",
-      category: "Permits & Licenses",
-      icon: Users,
-      estimatedTime: "2-3 business days",
-      rating: 4.7,
-      popular: true,
-      online: true,
-    },
-    {
-      id: 6,
-      title: "Water Bill Payment",
-      description: "Pay monthly water and sewer charges",
-      category: "Utilities",
-      icon: CreditCard,
-      estimatedTime: "Immediate",
-      rating: 4.8,
-      popular: true,
-      online: true,
-    },
-    {
-      id: 7,
-      title: "Voter Registration",
-      description: "Register to vote or update registration",
-      category: "Civic",
-      icon: Users,
-      estimatedTime: "1-2 business days",
-      rating: 4.9,
-      popular: false,
-      online: true,
-    },
-    {
-      id: 8,
-      title: "Trash Collection Schedule",
-      description: "View and update trash collection preferences",
-      category: "Utilities",
-      icon: FileText,
-      estimatedTime: "Immediate",
-      rating: 4.5,
-      popular: false,
-      online: true,
-    },
-  ];
+  {
+    id: 1,
+    title: "PAN Card Application",
+    description: "Apply for or update PAN card",
+    category: "Tax Services",
+    icon: CreditCard,
+    estimatedTime: "Immediate",
+    rating: 4.8,
+    popular: true,
+    online: true,
+    link: "https://www.onlineservices.nsdl.com/paam/endUserRegisterContact.html",
+  },
+  {
+    id: 2,
+    title: "Property Tax Payment",
+    description: "Pay annual property taxes online",
+    category: "Tax Services",
+    icon: CreditCard,
+    estimatedTime: "Immediate",
+    rating: 4.9,
+    popular: true,
+    online: true,
+    link: "https://www.igroop.com/property-tax-payment", // Replace with your state's official site
+  },
+  {
+    id: 3,
+    title: "Business License Renewal",
+    description: "Renew your business operating license",
+    category: "Business",
+    icon: Briefcase,
+    estimatedTime: "5-7 business days",
+    rating: 4.6,
+    popular: false,
+    online: true,
+    link: "https://services.india.gov.in/service/detail/renewal-of-trade-license",
+  },
+  {
+    id: 4,
+    title: "Building Permit",
+    description: "Apply for residential or commercial building permits",
+    category: "Housing",
+    icon: Home,
+    estimatedTime: "10-15 business days",
+    rating: 4.4,
+    popular: false,
+    online: false,
+  },
+  {
+    id: 5,
+    title: "Marriage Certificate",
+    description: "Request official marriage certificate copies",
+    category: "Permits & Licenses",
+    icon: Users,
+    estimatedTime: "2-3 business days",
+    rating: 4.7,
+    popular: true,
+    online: true,
+    link: "https://services.india.gov.in/service/detail/application-for-marriage-certificate",
+  },
+  {
+    id: 6,
+    title: "Water Bill Payment",
+    description: "Pay monthly water and sewer charges",
+    category: "Utilities",
+    icon: CreditCard,
+    estimatedTime: "Immediate",
+    rating: 4.8,
+    popular: true,
+    online: true,
+    link: "https://www.bbmp.gov.in/home",
+  },
+  {
+    id: 7,
+    title: "Voter Registration",
+    description: "Register to vote or update registration",
+    category: "Civic",
+    icon: Users,
+    estimatedTime: "1-2 business days",
+    rating: 4.9,
+    popular: false,
+    online: true,
+    link: "https://voters.eci.gov.in/",
+  },
+  {
+    id: 8,
+    title: "Trash Collection Schedule",
+    description: "View and update trash collection preferences",
+    category: "Utilities",
+    icon: FileText,
+    estimatedTime: "Immediate",
+    rating: 4.5,
+    popular: false,
+    online: true,
+    link: "https://www.swachhbharatmission.gov.in/",
+  },
+  {
+    id: 9,
+    title: "Birth Certificate Application",
+    description: "Apply for a certified copy of your birth certificate",
+    category: "Permits & Licenses",
+    icon: FileText,
+    estimatedTime: "2-3 business days",
+    rating: 4.7,
+    popular: true,
+    online: true,
+    link: "https://crsorgi.gov.in/web/index.php/auth/login",
+  },
+  {
+    id: 10,
+    title: "Death Certificate Request",
+    description: "Request an official copy of a death certificate",
+    category: "Permits & Licenses",
+    icon: FileText,
+    estimatedTime: "3-5 business days",
+    rating: 4.6,
+    popular: false,
+    online: true,
+    link: "https://crsorgi.gov.in/web/index.php/auth/login",
+  },
+  {
+    id: 11,
+    title: "Aadhar Card Update",
+    description: "Update name, address or phone on your Aadhar card",
+    category: "Civic",
+    icon: Users,
+    estimatedTime: "7-10 business days",
+    rating: 4.2,
+    popular: true,
+    online: false,
+  },
+  {
+    id: 12,
+    title: "Electricity Bill Payment",
+    description: "Pay your monthly electricity usage charges online",
+    category: "Utilities",
+    icon: CreditCard,
+    estimatedTime: "Immediate",
+    rating: 4.8,
+    popular: true,
+    online: true,
+    link: "https://www.bharatbillpay.com/BillPay.aspx",
+  },
+  {
+    id: 13,
+    title: "Passport Application",
+    description: "Apply or renew your Indian passport",
+    category: "Permits & Licenses",
+    icon: FileText,
+    estimatedTime: "15-20 business days",
+    rating: 4.5,
+    popular: false,
+    online: false,
+  },
+  {
+    id: 14,
+    title: "Driving License Renewal",
+    description: "Renew your driver’s license or learner’s license",
+    category: "Transportation",
+    icon: Car,
+    estimatedTime: "7-10 business days",
+    rating: 4.3,
+    popular: true,
+    online: true,
+    link: "https://sarathi.parivahan.gov.in/",
+  },
+  {
+    id: 15,
+    title: "Senior Citizen ID Card",
+    description: "Apply for an ID card for senior citizen benefits",
+    category: "Civic",
+    icon: Users,
+    estimatedTime: "5-7 business days",
+    rating: 4.6,
+    popular: false,
+    online: true,
+    link: "https://services.india.gov.in/service/detail/senior-citizen-id-card-1",
+  },
+  {
+    id: 16,
+    title: "Ration Card Services",
+    description: "Apply or update your family ration card",
+    category: "Civic",
+    icon: FileText,
+    estimatedTime: "10-15 business days",
+    rating: 4.4,
+    popular: false,
+    online: false,
+  },
+  {
+    id: 17,
+    title: "Land Record Lookup",
+    description: "View ownership details of land/property",
+    category: "Housing",
+    icon: Home,
+    estimatedTime: "Immediate",
+    rating: 4.6,
+    popular: false,
+    online: true,
+    link: "https://bhulekh.gov.in/",
+  },
+  {
+    id: 18,
+    title: "Income Certificate",
+    description: "Generate a certificate for income verification",
+    category: "Permits & Licenses",
+    icon: FileText,
+    estimatedTime: "3-5 business days",
+    rating: 4.3,
+    popular: false,
+    online: true,
+    link: "https://services.india.gov.in/service/detail/income-certificate-3",
+  },
+  {
+    id: 19,
+    title: "Domicile Certificate",
+    description: "Apply for proof of residence for state-level benefits",
+    category: "Permits & Licenses",
+    icon: FileText,
+    estimatedTime: "4-6 business days",
+    rating: 4.4,
+    popular: false,
+    online: true,
+    link: "https://services.india.gov.in/service/detail/domicile-certificate-2",
+  },
+  {
+    id: 20,
+    title: "Pension Services",
+    description: "Manage and apply for pensions and related benefits",
+    category: "Civic",
+    icon: Briefcase,
+    estimatedTime: "5-7 business days",
+    rating: 4.5,
+    popular: false,
+    online: true,
+    link: "https://pensionersportal.gov.in/",
+  },
+  {
+    id: 21,
+    title: "Public Grievance Portal",
+    description: "File complaints or feedback on any public services",
+    category: "Civic",
+    icon: FileText,
+    estimatedTime: "2-3 business days",
+    rating: 4.2,
+    popular: false,
+    online: true,
+    link: "https://pgportal.gov.in/",
+  },
+  {
+    id: 22,
+    title: "E-Challan Payment",
+    description: "Pay traffic fines and challans online",
+    category: "Transportation",
+    icon: Car,
+    estimatedTime: "Immediate",
+    rating: 4.7,
+    popular: true,
+    online: true,
+    link: "https://echallan.parivahan.gov.in/",
+  },
+  {
+    id: 23,
+    title: "Certificate of Residence",
+    description: "Proof of address for official purposes",
+    category: "Permits & Licenses",
+    icon: FileText,
+    estimatedTime: "3-4 business days",
+    rating: 4.4,
+    popular: false,
+    online: true,
+    link: "https://services.india.gov.in/service/detail/certificate-of-residence",
+  },
+  {
+    id: 24,
+    title: "RTI Filing",
+    description: "File a Right to Information (RTI) request",
+    category: "Civic",
+    icon: FileText,
+    estimatedTime: "5-7 business days",
+    rating: 4.5,
+    popular: false,
+    online: true,
+    link: "https://rtionline.gov.in/",
+  },
+];
 
-  const filteredServices = services.filter(
-    (service) =>
-      service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredServices = services
+    .filter((service) =>
+      selectedCategory === "All Services"
+        ? true
+        : service.category === selectedCategory
+    )
+    .filter(
+      (service) =>
+        service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .slice(0, visibleCount);
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    setSearchParams({ category, search: searchQuery });
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setSearchParams({ category: selectedCategory, search: value });
+  };
 
   return (
     <div className="min-h-screen bg-government-50">
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-government-900 mb-2">
             Government Services
@@ -148,7 +376,6 @@ const Services = () => {
           </p>
         </div>
 
-        {/* Search and Filters */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
@@ -156,26 +383,22 @@ const Services = () => {
               <Input
                 placeholder="Search services..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 className="pl-10"
               />
             </div>
             <Button variant="outline" className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Filters
+              <Filter className="h-4 w-4" /> Filters
             </Button>
           </div>
 
-          {/* Category Tabs */}
           <div className="flex flex-wrap gap-2">
             {serviceCategories.map((category, index) => (
               <Button
                 key={index}
-                variant={category.active ? "default" : "outline"}
+                variant={selectedCategory === category.name ? "default" : "outline"}
+                onClick={() => handleCategoryChange(category.name)}
                 size="sm"
-                className={
-                  category.active ? "bg-civic-600 hover:bg-civic-700" : ""
-                }
               >
                 {category.name}
                 <Badge variant="secondary" className="ml-2">
@@ -186,51 +409,6 @@ const Services = () => {
           </div>
         </div>
 
-        {/* Popular Services Banner */}
-        <Card className="mb-8 border-civic-200 bg-civic-50">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-government-900 mb-2">
-                  Most Popular Services
-                </h2>
-                <p className="text-government-600">
-                  Quick access to the services citizens use most
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-civic-600" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-              {services
-                .filter((service) => service.popular)
-                .slice(0, 3)
-                .map((service) => {
-                  const Icon = service.icon;
-                  return (
-                    <div
-                      key={service.id}
-                      className="flex items-center p-4 bg-white rounded-lg border"
-                    >
-                      <div className="w-10 h-10 bg-civic-100 rounded-lg flex items-center justify-center mr-3">
-                        <Icon className="w-5 h-5 text-civic-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-government-900 text-sm">
-                          {service.title}
-                        </h3>
-                        <p className="text-xs text-government-600">
-                          {service.estimatedTime}
-                        </p>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-government-400" />
-                    </div>
-                  );
-                })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map((service) => {
             const Icon = service.icon;
@@ -257,7 +435,9 @@ const Services = () => {
                       )}
                     </div>
                   </div>
-                  <CardTitle className="text-lg">{service.title}</CardTitle>
+                  <CardTitle className="text-lg cursor-pointer hover:underline">
+                    {service.title}
+                  </CardTitle>
                   <CardDescription>{service.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -272,15 +452,23 @@ const Services = () => {
                         {service.rating}
                       </div>
                     </div>
-
                     <Badge variant="outline" className="w-fit">
                       {service.category}
                     </Badge>
+                          {service.online ? (
+                        <Button asChild className="w-full bg-civic-600 hover:bg-civic-700">
+                          <a href={service.link} target="_blank" rel="noopener noreferrer">
+                            Start Online
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <Button className="w-full bg-civic-600 hover:bg-civic-700">
+                          Schedule Appointment
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      )}
 
-                    <Button className="w-full bg-civic-600 hover:bg-civic-700">
-                      {service.online ? "Start Online" : "Schedule Appointment"}
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -288,29 +476,13 @@ const Services = () => {
           })}
         </div>
 
-        {/* Help Section */}
-        <Card className="mt-8">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-government-900 mb-2">
-                Need Help Finding a Service?
-              </h2>
-              <p className="text-government-600 mb-6">
-                Our AI assistant can help you find the right service or answer
-                questions
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild className="bg-civic-600 hover:bg-civic-700">
-                  <a href="/chat">
-                    Ask AI Assistant
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-                <Button variant="outline">Contact Support</Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {filteredServices.length < services.length && (
+          <div className="mt-8 text-center">
+            <Button onClick={() => setVisibleCount((prev) => prev + 6)}>
+              Load More
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,25 +17,50 @@ import {
   CheckCircle,
   Settings,
   Search,
-  Filter,
   MoreVertical,
   Clock,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+
+dayjs.extend(relativeTime);
+
+// Filter button with icon and badge reusable component
+const FilterButton = ({ icon: Icon, label, count, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
+      active
+        ? "bg-civic-100 border-civic-300 text-civic-700"
+        : "border-government-200 hover:bg-government-50"
+    }`}
+  >
+    <span className="flex items-center gap-2 text-sm font-medium">
+      {Icon && <Icon className="w-4 h-4" />}
+      {label}
+    </span>
+    <Badge variant="secondary">{count}</Badge>
+  </button>
+);
 
 const Notifications = () => {
-  const [filter, setFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const notifications = [
+  // Initial notifications with timestamps instead of strings for time
+  const initialNotifications = [
     {
       id: 1,
       type: "meeting",
       title: "City Council Meeting Tomorrow",
       description:
         "The monthly city council meeting is scheduled for December 20th at 6:00 PM. Agenda includes community center proposal and budget amendments.",
-      time: "2 hours ago",
+      createdAt: dayjs().subtract(2, "hour").toDate(),
       read: false,
       priority: "high",
       icon: Calendar,
@@ -47,7 +72,7 @@ const Notifications = () => {
       title: "Parking Permit Application Approved",
       description:
         "Your parking permit application #PP-2024-1234 has been approved. You can pick up your permit at City Hall or request delivery.",
-      time: "4 hours ago",
+      createdAt: dayjs().subtract(4, "hour").toDate(),
       read: false,
       priority: "medium",
       icon: CheckCircle,
@@ -59,7 +84,7 @@ const Notifications = () => {
       title: "Water Service Interruption",
       description:
         "Scheduled water service interruption on Maple Street from 10 AM to 2 PM tomorrow for maintenance work.",
-      time: "6 hours ago",
+      createdAt: dayjs().subtract(6, "hour").toDate(),
       read: true,
       priority: "high",
       icon: AlertTriangle,
@@ -71,7 +96,7 @@ const Notifications = () => {
       title: "New Online Tax Payment Portal",
       description:
         "We've launched a new online portal for property tax payments with enhanced security and mobile-friendly design.",
-      time: "1 day ago",
+      createdAt: dayjs().subtract(1, "day").toDate(),
       read: true,
       priority: "low",
       icon: Info,
@@ -83,7 +108,7 @@ const Notifications = () => {
       title: "Property Tax Payment Due Soon",
       description:
         "Your property tax payment of $2,847.50 is due on December 31st. Pay online to avoid late fees.",
-      time: "2 days ago",
+      createdAt: dayjs().subtract(2, "day").toDate(),
       read: false,
       priority: "high",
       icon: Clock,
@@ -95,7 +120,7 @@ const Notifications = () => {
       title: "Community Volunteer Opportunity",
       description:
         "Join us for the annual city cleanup event on January 15th. Register online and help make our city beautiful.",
-      time: "3 days ago",
+      createdAt: dayjs().subtract(3, "day").toDate(),
       read: true,
       priority: "low",
       icon: Users,
@@ -103,47 +128,82 @@ const Notifications = () => {
     },
   ];
 
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedIds, setExpandedIds] = useState(new Set());
+
+  // Filter options with icons
   const filterOptions = [
-    { value: "all", label: "All Notifications", count: notifications.length },
+    { value: "all", label: "All Notifications", count: notifications.length, icon: Bell },
     {
       value: "unread",
       label: "Unread",
       count: notifications.filter((n) => !n.read).length,
+      icon: Bell,
     },
     {
       value: "high",
       label: "High Priority",
       count: notifications.filter((n) => n.priority === "high").length,
+      icon: AlertTriangle,
     },
     {
       value: "service",
       label: "Service Updates",
       count: notifications.filter((n) => n.type === "service").length,
+      icon: CheckCircle,
     },
     {
       value: "meeting",
       label: "Meetings",
       count: notifications.filter((n) => n.type === "meeting").length,
+      icon: Calendar,
     },
   ];
 
-  const filteredNotifications = notifications.filter((notification) => {
-    const matchesFilter =
-      filter === "all" ||
-      (filter === "unread" && !notification.read) ||
-      (filter === "high" && notification.priority === "high") ||
-      notification.type === filter;
+  // Mark all as read
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
 
-    const matchesSearch =
-      notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      notification.description
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+  // Mark single notification as read
+  const markAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
 
-    return matchesFilter && matchesSearch;
-  });
+  // Toggle expand/collapse description
+  const toggleExpand = (id) => {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
+      return newSet;
+    });
+  };
 
-  const getPriorityBadge = (priority: string) => {
+  // Filtered & searched notifications with memoization
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter((notification) => {
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "unread" && !notification.read) ||
+        (filter === "high" && notification.priority === "high") ||
+        notification.type === filter;
+
+      const searchLower = searchQuery.toLowerCase();
+
+      const matchesSearch =
+        notification.title.toLowerCase().includes(searchLower) ||
+        notification.description.toLowerCase().includes(searchLower);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [notifications, filter, searchQuery]);
+
+  const getPriorityBadge = (priority) => {
     switch (priority) {
       case "high":
         return (
@@ -168,7 +228,7 @@ const Notifications = () => {
     }
   };
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type) => {
     switch (type) {
       case "meeting":
         return "text-blue-600 bg-blue-100";
@@ -208,7 +268,10 @@ const Notifications = () => {
               <Settings className="h-4 w-4" />
               Settings
             </Button>
-            <Button className="bg-civic-600 hover:bg-civic-700">
+            <Button
+              className="bg-civic-600 hover:bg-civic-700"
+              onClick={markAllAsRead}
+            >
               Mark All Read
             </Button>
           </div>
@@ -239,18 +302,14 @@ const Notifications = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {filterOptions.map((option) => (
-                  <button
+                  <FilterButton
                     key={option.value}
+                    icon={option.icon}
+                    label={option.label}
+                    count={option.count}
+                    active={filter === option.value}
                     onClick={() => setFilter(option.value)}
-                    className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                      filter === option.value
-                        ? "bg-civic-100 border-civic-300 text-civic-700"
-                        : "border-government-200 hover:bg-government-50"
-                    }`}
-                  >
-                    <span className="text-sm font-medium">{option.label}</span>
-                    <Badge variant="secondary">{option.count}</Badge>
-                  </button>
+                  />
                 ))}
               </CardContent>
             </Card>
@@ -271,9 +330,7 @@ const Notifications = () => {
                   <div className="text-2xl font-bold text-civic-600 mb-1">
                     {notifications.filter((n) => n.priority === "high").length}
                   </div>
-                  <div className="text-sm text-government-600">
-                    High Priority
-                  </div>
+                  <div className="text-sm text-government-600">High Priority</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-civic-600 mb-1">
@@ -290,10 +347,13 @@ const Notifications = () => {
             <div className="space-y-4">
               {filteredNotifications.map((notification) => {
                 const Icon = notification.icon;
+                const isExpanded = expandedIds.has(notification.id);
+                const descriptionTooLong = notification.description.length > 150;
+
                 return (
                   <Card
                     key={notification.id}
-                    className={`hover:shadow-md transition-shadow ${
+                    className={`hover:shadow-md transition-shadow transform hover:scale-[1.01] ${
                       !notification.read
                         ? "border-l-4 border-l-civic-600 bg-civic-50/30"
                         : ""
@@ -302,7 +362,9 @@ const Notifications = () => {
                     <CardContent className="p-6">
                       <div className="flex items-start space-x-4">
                         <div
-                          className={`w-12 h-12 rounded-lg flex items-center justify-center ${getTypeColor(notification.type)}`}
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center ${getTypeColor(
+                            notification.type
+                          )}`}
                         >
                           <Icon className="w-6 h-6" />
                         </div>
@@ -310,7 +372,7 @@ const Notifications = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between mb-2">
                             <h3
-                              className={`font-semibold text-government-900 ${
+                              className={`font-semibold ${
                                 !notification.read
                                   ? "text-government-900"
                                   : "text-government-700"
@@ -318,15 +380,31 @@ const Notifications = () => {
                             >
                               {notification.title}
                             </h3>
+
                             <div className="flex items-center space-x-2 ml-4">
                               {getPriorityBadge(notification.priority)}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                  {!notification.read && (
+                                    <DropdownMenuItem
+                                      onClick={() => markAsRead(notification.id)}
+                                    >
+                                      Mark as Read
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem>Archive</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
 
@@ -337,19 +415,34 @@ const Notifications = () => {
                                 : "text-government-600"
                             }`}
                           >
-                            {notification.description}
+                            {descriptionTooLong && !isExpanded
+                              ? notification.description.slice(0, 150) + "..."
+                              : notification.description}
+                            {descriptionTooLong && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => toggleExpand(notification.id)}
+                              >
+                                {isExpanded ? "Show less" : "Read more"}
+                              </Button>
+                            )}
                           </p>
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4 text-sm text-government-500">
-                              <span>{notification.time}</span>
+                              <span>{dayjs(notification.createdAt).fromNow()}</span>
                               <Badge variant="outline" className="text-xs">
                                 {notification.category}
                               </Badge>
                             </div>
 
                             {!notification.read && (
-                              <Button size="sm" variant="outline">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => markAsRead(notification.id)}
+                              >
                                 Mark as Read
                               </Button>
                             )}

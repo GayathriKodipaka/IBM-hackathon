@@ -165,7 +165,7 @@ const Dashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-government-900 mb-2">
-            Welcome back, John Citizen
+            Welcome back, Raju
           </h1>
           <p className="text-government-600">
             Here's what's happening with your government services
