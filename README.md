@@ -29,10 +29,15 @@ Copy
 Edit
 .
 ├── ibm_granite.ipynb        # Jupyter notebook with integration example
+
 ├── components/              # UI Components (Navigation, ChatInterface, etc.)
+
 ├── pages/                   # Main frontend pages
+
 └── utils/                   # IBM query logic (e.g., queryGranite)
+
 ⚙️ How to Run
+
 Backend Setup
 Create an IBM Cloud account and get access to the Granite model.
 
