@@ -14,13 +14,12 @@ Basic UI components (cards, badges, chat bubbles)
 
 🧠 Technologies Used
 
-Frontend: React.js (with Tailwind CSS & ShadCN UI components)
+Frontend: Gradio
 
-Backend: Custom Express/Node.js server or direct integration using IBM API
+Backend: Python
 
 Model: IBM Granite Language Model
 
-Other Libraries: Axios, useState/useEffect hooks, etc.
 
 📂 File Structure
 
